@@ -12,7 +12,7 @@ Which store-category combinations have the highest rentals per copy (24 May to 3
 
 **Measure:** rentals per copy per store and category, 24 May to 31 August 2005, store from inventory.store_id, idle copies kept (4581 copies). 42 films have no copies and can't appear in any rental-based result. 
 
-SQL queries are in [queries.sql](https://github.com/Nasir-ay/sql-sakila/blob/main/queries.sql)
+SQL queries are in [queries.sql](https://github.com/nasir-ay/sql-sakila/blob/main/queries.sql)
 
 ## Key Findings
 1. The gap between the best and worst store-category combination based on rentals per copy (Documentary vs Horror, store 2: 3.65 vs 3.32) is about 9%, similar in size to the variation expected by chance for counts of 450 to 600 rentals (roughly 6%, though not formally tested), so I can’t conclude any category has genuinely higher demand per copy.
