@@ -8,77 +8,11 @@ Which store-category combinations have the highest rentals per copy (24 May to 3
 
 **Data check:** The date range showed 24th May 2005 to 14th February 2006. However, the first and last months are partial, while the months September 2005 to January 2006 do not exist in the dataset. I excluded February 2006 because of the missing data from prior months, which could potentially skew the data. I also checked and confirmed that each film belongs to only one category, so joins don’t duplicate rows.
 
-```
-select min(rental_date) as first_rental, max(rental_date) as last_rental
-from rental
-;
-```
-
-```
--- checking the available months in the dataset
-select date_format(rental_date, '%Y-%m') as rental_month, count(*) as rentals
-from rental
-group by rental_month
-order by rental_month
-;
-```
-
-```
--- checking how many categories each film has
-select film_id, count(*) as n
-from film_category
-group by film_id
-having count(*) > 1
-;
-```
-
-
 **Store attribution:** I used inventory.store_id because the decision is about shelf stock. I tested this by whether inventory.store_id and customer.store_id match, and found 50% of rentals mismatch, indicating that about 50% of rentals occur at a store other than the customer's home store. Therefore, using customer.store_id might change the results.
-```
-select count(*) as total_rentals, sum(i.store_id <> c.store_id) as mismatch_count, round((sum(i.store_id <> c.store_id)/count(*))*100, 1) as mismatch_pct
-from rental r
-join inventory i on r.inventory_id = i.inventory_id
-join customer c on r.customer_id = c.customer_id
-where r.rental_date < '2005-09-01'
-;
-```
 
 **Measure:** rentals per copy per store and category, 24 May to 31 August 2005, store from inventory.store_id, idle copies kept (4581 copies). 42 films have no copies and can't appear in any rental-based result. 
 
-```
--- 42 films with no copies
-select f.film_id, f.title, count(i.inventory_id) as n_copies
-from film f left join inventory i on f.film_id = i.film_id
-group by f.film_id
-having n_copies = 0
-```
-
-```
--- rentals per copy
-
-with copies as (
-select i.store_id as store_id, c.name as category, count(distinct i.inventory_id) as n_inventory
-from inventory i 
-    join film_category fc on i.film_id = fc.film_id
-    join category c on c.category_id = fc.category_id
-group by c.name, i.store_id
-),
-rentals_in_period as (
-select i.store_id as store_id, c.name as category, count(rental_id) as n_rentals 
-from inventory i 
-	join rental r on i.inventory_id = r.inventory_id
-    join film_category fc on i.film_id = fc.film_id
-    join category c on c.category_id = fc.category_id
-where r.rental_date < '2005-09-01'
-group by c.name, i.store_id
-)
-select cp.store_id, cp.category, cp.n_inventory, rp.n_rentals, round(COALESCE(rp.n_rentals, 0)/cp.n_inventory, 2) as rental_per_copy
-from copies cp
-	left join rentals_in_period rp on cp.store_id = rp.store_id and cp.category = rp.category
-order by rental_per_copy desc
-;    
-```
-
+SQL queries are in [queries.sql](https://github.com/Nasir-ay/sql-sakila/blob/main/queries.sql)
 
 ## Key Findings
 1. The gap between the best and worst store-category combination based on rentals per copy (Documentary vs Horror, store 2: 3.65 vs 3.32) is about 9%, similar in size to the variation expected by chance for counts of 450 to 600 rentals (roughly 6%, though not formally tested), so I can’t conclude any category has genuinely higher demand per copy.
